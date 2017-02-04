@@ -39,7 +39,7 @@ describe('REST API', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          payload: fullData
+          payload: minimalData
         };
         return server.inject(options);
       }).then(() => {
@@ -49,7 +49,7 @@ describe('REST API', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          payload: {email: fullData.email, password: fullData.password}
+          payload: {email: minimalData.email, password: minimalData.password}
         };
         return server.inject(options);
       }).then((response) => {
@@ -61,65 +61,36 @@ describe('REST API', () => {
 
   });
 
-  const fullData = {
+  const minimalData = {
     username: 'jdoe',
     email: 'jdoe@test.test',
     password: '12345678',
     language: 'en_EN',
-    forename: 'John',
-    surname: 'Doe',
-    organization: 'Test',
   };
 
   let options = {
-    method: 'GET',
-    url: '/user/', //+profile at the end
+    method: 'DELETE',
+    url: '/user/',
     headers: {
       'Content-Type': 'application/json',
       '----jwt----': ''
     },
   };
 
-  context('when trying to get private user information', () => {
-    it('it should reply all user information for a registered user', () => {
-      let opt = JSON.parse(JSON.stringify(options));
-      opt.url += userid + '/profile';
-      opt.headers['----jwt----'] = jwtHeader;
-      return server.inject(opt).then((response) => {
-        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
-        response.statusCode.should.equal(200);
-        response.payload.should.be.a('string');
-        let payload = JSON.parse(response.payload);
-        payload.should.be.an('object').and.contain.keys('_id', 'username', 'country', 'picture', 'description', 'organization', 'surname', 'forename', 'email', 'registered', 'groups', 'language');
-        payload._id.should.be.a('number').and.equal(1);
-        let comp = Object.assign({},fullData);
-        delete comp.password;
-        payload.should.include(comp);
-        payload.groups.should.be.an('array').and.be.empty;
-        let tmp = new Date(payload.registered);
-        let current = new Date();
-        tmp.should.beforeTime(current);
-      });
-    });
+  let options2 = {
+    method: 'GET',
+    url: '/user/',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
 
-    //it('it should reply 403 for a not existing user', () => { //TODO Correct test
-    it('it should reply 404 for a not existing user', () => { //403: Forbidden, it is not forbidden to search for a not existing User. 404: Not Found, is better
-      let opt = JSON.parse(JSON.stringify(options));
-      opt.url += '10' + '/profile';
-      opt.headers['----jwt----'] = jwtHeader;
-      return server.inject(opt).then((response) => {
-        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
-        response.statusCode.should.equal(404);
-        response.payload.should.be.a('string');
-        let payload = JSON.parse(response.payload);
-        payload.should.contain.keys('statusCode', 'error', 'message');
-        payload.error.should.equal('Not Found');
-      });
-    });
+  context('when trying to delete a users data', () => {
 
-    it('it should reply 404 if jwt was ok and user not in database', () => {
+    //it('it should reply 403 for a not existing user', () => { //QUESTION Or better Not Found?
+    it('it should reply 404 for a not existing user', () => {
       let opt = JSON.parse(JSON.stringify(options));
-      opt.url += '10' + '/profile';
+      opt.url += 11;
       opt.headers['----jwt----'] = jwtHeader;
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
@@ -133,7 +104,7 @@ describe('REST API', () => {
 
     it('it should reply 401 in case the JWT is missing', () => {
       let opt = JSON.parse(JSON.stringify(options));
-      opt.url += userid + '/profile';
+      opt.url += userid;
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
         response.statusCode.should.equal(401);
@@ -141,6 +112,57 @@ describe('REST API', () => {
         let payload = JSON.parse(response.payload);
         payload.should.contain.keys('statusCode', 'error', 'message');
         payload.error.should.equal('Unauthorized');
+      });
+    });
+
+    it('it should reply 400 in case the id parameter is missing', () => {
+      let opt = JSON.parse(JSON.stringify(options));
+      opt.url += '';
+      opt.headers['----jwt----'] = jwtHeader;
+      return server.inject(opt).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(400);
+        response.payload.should.be.a('string');
+        let payload = JSON.parse(response.payload);
+        payload.should.contain.keys('statusCode', 'error', 'message');
+        payload.error.should.equal('Bad Request');
+      });
+    });
+
+    it('it should reply 400 in case the id parameter is of wrong type', () => {
+      let opt = JSON.parse(JSON.stringify(options));
+      opt.url += 'abc';
+      opt.headers['----jwt----'] = jwtHeader;
+      return server.inject(opt).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(400);
+        response.payload.should.be.a('string');
+        let payload = JSON.parse(response.payload);
+        payload.should.contain.keys('statusCode', 'error', 'message');
+        payload.error.should.equal('Bad Request');
+      });
+    });
+
+    it('it should reply with 200 in case the user is deactivated and after the same call should return 404', () => {
+      let opt = JSON.parse(JSON.stringify(options));
+      opt.url += userid;
+      opt.headers['----jwt----'] = jwtHeader;
+      return server.inject(opt).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(200);
+        response.payload.should.be.a('string').and.be.empty;
+      }).then(() => {
+        options2.url += userid;
+        console.log(options2);
+        return server.inject(options2);
+      }).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(404);
+        response.payload.should.be.a('string');
+        let payload = JSON.parse(response.payload);
+        payload.should.be.an('object').and.contain.keys('statusCode', 'error');
+        payload.statusCode.should.be.a('number').and.equal(404);
+        payload.error.should.be.a('string').and.equal('Not Found');
       });
     });
 
