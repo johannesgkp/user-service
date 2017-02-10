@@ -90,9 +90,22 @@ describe('REST API', () => {
       });
     });
 
-    it('it should reply with 400 for missing data', () => {
+    it('it should reply with 400 for missing data(no password)', () => {
       let opt = JSON.parse(JSON.stringify(options));
       opt.payload = {email: 'jdoe'};
+      return server.inject(opt).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(400);
+        response.payload.should.be.a('string');
+        let payload = JSON.parse(response.payload);
+        payload.should.be.an('object').and.contain.keys('statusCode', 'error', 'message', 'validation');
+        payload.error.should.be.a('string').and.equal('Bad Request');
+      });
+    });
+
+    it('it should reply with 400 for missing data(no email)', () => {
+      let opt = JSON.parse(JSON.stringify(options));
+      opt.payload = {password: '12345678'};
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
         response.statusCode.should.equal(400);

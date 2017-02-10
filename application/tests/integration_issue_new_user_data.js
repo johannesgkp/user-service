@@ -238,22 +238,22 @@ describe('REST API', () => {
       });
     });
 
-    it('it should reply 400 in case the id parameter is of wrong type', () => {//QUESTION Or Unprocessable Entity 422 ?
+    it('it should reply 422 in case the id parameter is of wrong type', () => {//QUESTION Or 400  	Bad Request?
       let opt = JSON.parse(JSON.stringify(options));
       opt.url += 'abc' + '/profile';
       opt.headers['----jwt----'] = jwtHeader;
       opt.payload = JSON.parse(JSON.stringify(fullData));
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
-        response.statusCode.should.equal(400);
+        response.statusCode.should.equal(422);
         response.payload.should.be.a('string');
         let payload = JSON.parse(response.payload);
         payload.should.contain.keys('statusCode', 'error', 'message');
-        payload.error.should.equal('Bad Request');
+        //payload.error.should.equal('Unprocessable Entity');
       });
     });
 
-    it('it should reply 400 in case the email parameter is not an email', () => {//QUESTION Or Unprocessable Entity 422 ?
+    it('it should reply 422 in case the email parameter is not an email', () => {//QUESTION Or 400  	Bad Request?
       let opt = JSON.parse(JSON.stringify(options));
       opt.url += userid + '/profile';
       opt.headers['----jwt----'] = jwtHeader;
@@ -261,15 +261,15 @@ describe('REST API', () => {
       opt.payload.email = 'abc@abc';
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
-        response.statusCode.should.equal(400);
+        response.statusCode.should.equal(422);
         response.payload.should.be.a('string');
         let payload = JSON.parse(response.payload);
         payload.should.contain.keys('statusCode', 'error', 'message');
-        payload.error.should.equal('Bad Request');
+        //payload.error.should.equal('Unprocessable Entity');
       });
     });
 
-    it('it should reply 400 in case the language parameter is not a language', () => {//QUESTION Or Unprocessable Entity 422 ?
+    it('it should reply 422 in case the language parameter is not a language', () => {//QUESTION Or 400  	Bad Request?
       let opt = JSON.parse(JSON.stringify(options));
       opt.url += userid + '/profile';
       opt.headers['----jwt----'] = jwtHeader;
@@ -277,11 +277,27 @@ describe('REST API', () => {
       opt.payload.language = 'abc';
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
-        response.statusCode.should.equal(400);
+        response.statusCode.should.equal(422);
         response.payload.should.be.a('string');
         let payload = JSON.parse(response.payload);
         payload.should.contain.keys('statusCode', 'error', 'message');
-        payload.error.should.equal('Bad Request');
+        //payload.error.should.equal('Unprocessable Entity');
+      });
+    });
+	
+	it('it should reply 422 in case the picture parameter is not a url', () => {//QUESTION Or 400  	Bad Request?
+      let opt = JSON.parse(JSON.stringify(options));
+      opt.url += userid + '/profile';
+      opt.headers['----jwt----'] = jwtHeader;
+      opt.payload = JSON.parse(JSON.stringify(fullData));
+      opt.payload.picture = 'notAPicture';
+      return server.inject(opt).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(422);
+        response.payload.should.be.a('string');
+        let payload = JSON.parse(response.payload);
+        payload.should.contain.keys('statusCode', 'error', 'message');
+        //payload.error.should.equal('Unprocessable Entity');
       });
     });
 

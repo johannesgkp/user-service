@@ -155,7 +155,7 @@ describe('REST API', () => {
       });
     });
 
-    it('it should return 400 in case the username parameter is missing', () => {
+    it('it should return 400 in case the username parameter is missing(/information/username/)', () => {
       let opt = JSON.parse(JSON.stringify(options2));
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
@@ -200,7 +200,7 @@ describe('REST API', () => {
       });
     });
 
-    it('it should return 400 in case the username parameter is missing', () => {  //TODO 200 with emtpy array should be returned
+    it('it should return 400 in case the username parameter is missing(/information/username/search)', () => {  //TODO 200 with emtpy array should be returned
       let opt = JSON.parse(JSON.stringify(options3));
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
@@ -208,6 +208,19 @@ describe('REST API', () => {
         response.payload.should.be.a('string');
         let payload = JSON.parse(response.payload);
         payload.should.be.an('object').and.contain.keys('statusCode', 'error', 'message', 'validation');
+        payload.error.should.be.a('string').and.equal('Bad Request');
+      });
+    });
+	
+    it('it should return 200 with emtpy array in case the username parameter is missing(/information/username/search)', () => {  
+      let opt = JSON.parse(JSON.stringify(options3));
+      return server.inject(opt).then((response) => {
+        response.should.be.an('object').and.contain.keys('statusCode', 'payload');
+        response.statusCode.should.equal(200);
+        response.payload.should.be.a('string');
+        let payload = JSON.parse(response.payload);
+        payload.should.be.an('object');
+        payload.should.equal([]);
         payload.error.should.be.a('string').and.equal('Bad Request');
       });
     });
@@ -241,7 +254,7 @@ describe('REST API', () => {
       });
     });
 
-    it('it should return 400 in case the username parameter is missing', () => {
+    it('it should return 400 in case the username parameter is missing(/user/)', () => {
       let opt = JSON.parse(JSON.stringify(options4));
       return server.inject(opt).then((response) => {
         response.should.be.an('object').and.contain.keys('statusCode', 'payload');
